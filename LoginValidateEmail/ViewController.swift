@@ -12,13 +12,13 @@ class ViewController: UIViewController {
     private lazy var loginLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = UIFont.systemFont(ofSize: 22)
+        label.font = UIFont.systemFont(ofSize: 24, weight: .semibold)
         label.text = "Acesse sua conta"
         label.textAlignment = .center
         label.textColor = .black
         return label
     }()
-
+    
     let emailTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "Digite seu e-mail"
@@ -48,15 +48,105 @@ class ViewController: UIViewController {
         return button
     }()
     
+    private let formStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.alignment = .fill
+        stack.distribution = .fill
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+    
+    private func setBorder(for textField: UITextField, valid: Bool?) {
+        textField.layer.cornerRadius = 5
+        textField.layer.masksToBounds = true
+        textField.layer.borderWidth = 1
+        if let valid = valid {
+            textField.layer.borderColor = (valid ? UIColor.systemGreen : UIColor.systemRed).cgColor
+        } else {
+            textField.layer.borderColor = UIColor.clear.cgColor
+        }
+    }
+    
+    private func configureTextFieldAppearance(_ textField: UITextField, systemImageName: String?) {
+        textField.backgroundColor = UIColor.secondarySystemBackground
+        textField.textColor = .label
+        textField.tintColor = .systemBlue
+        textField.layer.cornerRadius = 8
+        textField.layer.masksToBounds = true
+        textField.borderStyle = .none
+
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        if let name = systemImageName, let image = UIImage(systemName: name) {
+            let imageView = UIImageView(image: image)
+            imageView.tintColor = .secondaryLabel
+            imageView.contentMode = .scaleAspectFit
+            imageView.frame = CGRect(x: 12, y: 10, width: 20, height: 20)
+            container.addSubview(imageView)
+        }
+        textField.leftView = container
+        textField.leftViewMode = .always
+    }
+    
+    private func styleLoginButton() {
+        loginButton.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        loginButton.layer.cornerRadius = 10
+        loginButton.layer.shadowColor = UIColor.black.cgColor
+        loginButton.layer.shadowOpacity = 0.15
+        loginButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        loginButton.layer.shadowRadius = 6
+    }
+
+    private func validatePasswordWithMessage(_ password: String?) -> (isValid: Bool, message: String?) {
+        // Require at least 8 chars, at least one lowercase, one uppercase, one digit, and one special character
+        let passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^._-])[A-Za-z\\d@$!%*?&#^._-]{8,}$"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", passwordRegex)
+        let ok = predicate.evaluate(with: password)
+        let message = ok ? nil : "A senha deve ter pelo menos 8 caracteres, incluir letras maiúsculas e minúsculas, um número e um caractere especial."
+        return (ok, message)
+    }
+
+    private func validateEmailWithMessage(_ email: String?) -> (isValid: Bool, message: String?) {
+        let emailRegex = "[A-Z0-9a-z._%+-]+@gmail\\.com"
+        let predicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
+        let ok = predicate.evaluate(with: email)
+        let message = ok ? nil : "Digite um e-mail válido do Gmail (ex: usuario@gmail.com)."
+        return (ok, message)
+    }
+    
+    private func updateLoginButtonState() {
+        let emailValid = validateEmailWithMessage(emailTextField.text).isValid
+        let passwordValid = validatePasswordWithMessage(passwordTextField.text).isValid
+        let enabled = emailValid && passwordValid
+        loginButton.isEnabled = enabled
+        loginButton.alpha = enabled ? 1.0 : 0.5
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        view.backgroundColor = .systemGroupedBackground
       
         view.addSubview(loginLabel)
-        view.addSubview(emailTextField)
-        view.addSubview(passwordTextField)
-        view.addSubview(loginButton)
+        view.addSubview(formStack)
+        formStack.addArrangedSubview(emailTextField)
+        formStack.addArrangedSubview(passwordTextField)
+        formStack.addArrangedSubview(loginButton)
         
         loginButton.addTarget(self, action: #selector(tappedLoginButton), for: .touchUpInside)
+        
+        emailTextField.addTarget(self, action: #selector(textFieldEditingChanged(_:)), for: .editingChanged)
+        passwordTextField.addTarget(self, action: #selector(textFieldEditingChanged(_:)), for: .editingChanged)
+        
+        configureTextFieldAppearance(emailTextField, systemImageName: "envelope")
+        configureTextFieldAppearance(passwordTextField, systemImageName: "lock")
+        styleLoginButton()
+        
+        // Start with neutral borders
+        setBorder(for: emailTextField, valid: nil)
+        setBorder(for: passwordTextField, valid: nil)
+        updateLoginButtonState()
         
         NSLayoutConstraint.activate([
             loginLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
@@ -64,28 +154,35 @@ class ViewController: UIViewController {
             loginLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             loginLabel.heightAnchor.constraint(equalToConstant: 40),
 
-            emailTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
-            emailTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            emailTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            emailTextField.heightAnchor.constraint(equalToConstant: 40),
-            
-            passwordTextField.topAnchor.constraint(equalTo: emailTextField.bottomAnchor, constant: 20),
-            passwordTextField.leadingAnchor.constraint(equalTo: emailTextField.leadingAnchor),
-            passwordTextField.trailingAnchor.constraint(equalTo: emailTextField.trailingAnchor),
-            passwordTextField.heightAnchor.constraint(equalToConstant: 40),
-            
-            loginButton.topAnchor.constraint(equalTo: passwordTextField.bottomAnchor, constant: 30),
-            loginButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            loginButton.widthAnchor.constraint(equalToConstant: 100),
-            loginButton.heightAnchor.constraint(equalToConstant: 44)
+            formStack.topAnchor.constraint(equalTo: loginLabel.bottomAnchor, constant: 24),
+            formStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            formStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
     }
     
+    @objc private func textFieldEditingChanged(_ textField: UITextField) {
+        if textField === emailTextField {
+            let result = validateEmailWithMessage(textField.text)
+            setBorder(for: textField, valid: textField.text?.isEmpty == false ? result.isValid : nil)
+        } else if textField === passwordTextField {
+            let result = validatePasswordWithMessage(textField.text)
+            setBorder(for: textField, valid: textField.text?.isEmpty == false ? result.isValid : nil)
+        }
+        updateLoginButtonState()
+    }
+    
     @objc func tappedLoginButton(_ sender: UIButton) {
-        if self.emailTextField.validateEmail() && self.passwordTextField.validatePassword() {
+        let emailResult = validateEmailWithMessage(emailTextField.text)
+        let passwordResult = validatePasswordWithMessage(passwordTextField.text)
+
+        setBorder(for: emailTextField, valid: emailResult.isValid)
+        setBorder(for: passwordTextField, valid: passwordResult.isValid)
+
+        if emailResult.isValid && passwordResult.isValid {
             self.showAlert(title: "Sucesso ao logar")
         } else {
-            self.showAlert(title: "Erro ao logar")
+            let message = passwordResult.message ?? emailResult.message ?? "Erro ao logar"
+            self.showAlert(title: message)
         }
     }
     
@@ -100,16 +197,16 @@ class ViewController: UIViewController {
 extension UITextField {
     
     func validateEmail() -> Bool {
-        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailRegex = "[A-Z0-9a-z._%+-]+@gmail\\.com"
         let validateRegex = NSPredicate(format: "SELF MATCHES %@", emailRegex)
         return validateRegex.evaluate(with: self.text)
     }
     
     func validatePassword() -> Bool {
-        let passwordRegex = ".{6,}"
+        // At least 8 chars, at least one lowercase, one uppercase, one digit, and one special character
+        let passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#^._-])[A-Za-z\\d@$!%*?&#^._-]{8,}$"
         let validateRegex = NSPredicate(format: "SELF MATCHES %@", passwordRegex)
         return validateRegex.evaluate(with: self.text)
     }
 }
-
 
