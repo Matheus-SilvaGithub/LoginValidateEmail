@@ -12,10 +12,9 @@ class ViewController: UIViewController {
     private lazy var loginLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.font = UIFont.systemFont(ofSize: 24, weight: .semibold)
+        label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
         label.text = "Acesse sua conta"
-        label.textAlignment = .center
-        label.textColor = .black
+        label.textColor = .systemGray
         return label
     }()
     
@@ -149,12 +148,12 @@ class ViewController: UIViewController {
         updateLoginButtonState()
         
         NSLayoutConstraint.activate([
-            loginLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            loginLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            loginLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            loginLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 200),
+            loginLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 35),
+            loginLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -30),
             loginLabel.heightAnchor.constraint(equalToConstant: 40),
 
-            formStack.topAnchor.constraint(equalTo: loginLabel.bottomAnchor, constant: 24),
+            formStack.topAnchor.constraint(equalTo: loginLabel.bottomAnchor, constant: 6),
             formStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             formStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
