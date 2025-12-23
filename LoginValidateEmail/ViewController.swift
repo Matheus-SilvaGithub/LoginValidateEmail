@@ -9,6 +9,13 @@ import UIKit
 
 class ViewController: UIViewController {
     
+    private let backgroundImageView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(named: "BackGround"))
+        imageView.contentMode = .scaleAspectFill
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+    }()
+    
     private lazy var loginLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -25,6 +32,8 @@ class ViewController: UIViewController {
         textField.keyboardType = .emailAddress
         textField.autocapitalizationType = .none
         textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        textField.contentVerticalAlignment = .center
         return textField
     }()
     
@@ -34,6 +43,8 @@ class ViewController: UIViewController {
         textField.borderStyle = .roundedRect
         textField.isSecureTextEntry = true
         textField.translatesAutoresizingMaskIntoConstraints = false
+        textField.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        textField.contentVerticalAlignment = .center
         return textField
     }()
     
@@ -44,6 +55,20 @@ class ViewController: UIViewController {
         button.setTitleColor(.white, for: .normal)
         button.layer.cornerRadius = 5
         button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    
+    private let registerButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        let title = "Não tem conta? Crie uma agora"
+        let attributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.systemBlue,
+            .underlineStyle: NSUnderlineStyle.single.rawValue
+        ]
+        let attributed = NSAttributedString(string: title, attributes: attributes)
+        button.setAttributedTitle(attributed, for: .normal)
+        button.contentHorizontalAlignment = .center
         return button
     }()
     
@@ -125,15 +150,27 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        view.backgroundColor = .systemGroupedBackground
+        // Background image
+        view.addSubview(backgroundImageView)
+        NSLayoutConstraint.activate([
+            backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
+        // Ensure background is behind all other content
+        view.sendSubviewToBack(backgroundImageView)
       
         view.addSubview(loginLabel)
         view.addSubview(formStack)
         formStack.addArrangedSubview(emailTextField)
         formStack.addArrangedSubview(passwordTextField)
         formStack.addArrangedSubview(loginButton)
+        formStack.addArrangedSubview(registerButton)
         
         loginButton.addTarget(self, action: #selector(tappedLoginButton), for: .touchUpInside)
+        registerButton.addTarget(self, action: #selector(tappedRegisterButton), for: .touchUpInside)
         
         emailTextField.addTarget(self, action: #selector(textFieldEditingChanged(_:)), for: .editingChanged)
         passwordTextField.addTarget(self, action: #selector(textFieldEditingChanged(_:)), for: .editingChanged)
@@ -141,6 +178,8 @@ class ViewController: UIViewController {
         configureTextFieldAppearance(emailTextField, systemImageName: "envelope")
         configureTextFieldAppearance(passwordTextField, systemImageName: "lock")
         styleLoginButton()
+        
+        registerButton.contentHorizontalAlignment = .center
         
         // Start with neutral borders
         setBorder(for: emailTextField, valid: nil)
@@ -157,6 +196,9 @@ class ViewController: UIViewController {
             formStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             formStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
+        
+        view.bringSubviewToFront(loginLabel)
+        view.bringSubviewToFront(formStack)
     }
     
     @objc private func textFieldEditingChanged(_ textField: UITextField) {
@@ -178,10 +220,29 @@ class ViewController: UIViewController {
         setBorder(for: passwordTextField, valid: passwordResult.isValid)
 
         if emailResult.isValid && passwordResult.isValid {
-            self.showAlert(title: "Sucesso ao logar")
+            // Navegar para a próxima tela após login bem-sucedido
+            let homeVC = HomeViewController()
+            if let nav = self.navigationController {
+                nav.pushViewController(homeVC, animated: true)
+            } else {
+                let nav = UINavigationController(rootViewController: homeVC)
+                nav.modalPresentationStyle = .fullScreen
+                self.present(nav, animated: true, completion: nil)
+            }
         } else {
             let message = passwordResult.message ?? emailResult.message ?? "Erro ao logar"
             self.showAlert(title: message)
+        }
+    }
+    
+    @objc private func tappedRegisterButton() {
+        let registerVC = RegisterViewController()
+        if let nav = self.navigationController {
+            nav.pushViewController(registerVC, animated: true)
+        } else {
+            let nav = UINavigationController(rootViewController: registerVC)
+            nav.modalPresentationStyle = .fullScreen
+            self.present(nav, animated: true, completion: nil)
         }
     }
     
