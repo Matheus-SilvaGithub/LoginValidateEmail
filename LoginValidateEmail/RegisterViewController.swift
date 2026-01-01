@@ -102,6 +102,8 @@ class RegisterViewController: UIViewController {
         view.backgroundColor = .systemBackground
         self.title = "Registrar"
 
+        navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Login", style: .plain, target: self, action: #selector(didTapBackToLogin))
+
         // Configure left icons
         configureTextFieldAppearance(emailTextField, systemImageName: "envelope")
         configureTextFieldAppearance(passwordTextField, systemImageName: "lock")
@@ -235,6 +237,23 @@ class RegisterViewController: UIViewController {
             self.navigationController?.popViewController(animated: true)
         })
         present(alert, animated: true)
+    }
+
+    @objc private func didTapBackToLogin() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            if let nav = navigationController {
+                nav.popToRootViewController(animated: true)
+            } else {
+                dismiss(animated: true)
+            }
+            return
+        }
+        let loginVC = ViewController()
+        let nav = UINavigationController(rootViewController: loginVC)
+        window.rootViewController = nav
+        window.makeKeyAndVisible()
+        UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
     }
 }
 // MARK: - Persistência local simples
